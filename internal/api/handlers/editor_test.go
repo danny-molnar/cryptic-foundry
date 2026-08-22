@@ -44,7 +44,7 @@ func TestCreateAndRetrievePuzzleDocument(t *testing.T) {
 	if created.ID == "" {
 		t.Fatal("created document has no ID")
 	}
-	stored, err := memory.Documents.Get(created.ID)
+	stored, err := memory.Documents.Get(t.Context(), created.ID)
 	if err != nil || stored.Title != "Draft" {
 		t.Fatalf("stored document = %#v, err = %v", stored, err)
 	}

@@ -19,10 +19,18 @@ func main() {
 		log.Fatalf("load word list: %v", err)
 	}
 
+	documentStore, err := store.OpenSQLiteDocumentStore(envOrDefault("CROSSWORD_DB_PATH", "crossword.db"))
+	if err != nil {
+		log.Fatalf("open document store: %v", err)
+	}
+	defer documentStore.Close()
+	memoryStore := store.NewMemoryStore()
+	memoryStore.Documents = documentStore
+
 	address := ":" + envOrDefault("PORT", "8080")
 	server := &http.Server{
 		Addr:              address,
-		Handler:           api.NewRouter(store.NewMemoryStore(), wordlist),
+		Handler:           api.NewRouter(memoryStore, wordlist),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { analyseClue, savePuzzle, type AnalysisResponse } from '$lib/api';
+	import { resolve } from '$app/paths';
+	import { analyseClue, getPuzzle, savePuzzle, type AnalysisResponse } from '$lib/api';
 	import { createGrid, deriveEntries } from '$lib/puzzle/grid';
 	import { parsePuzzleDocument, validatePuzzleDocument } from '$lib/puzzle/document';
 	import type { Cell, Direction, PuzzleDocument } from '$lib/puzzle/types';
@@ -37,6 +38,10 @@
 	let issues = $derived(validatePuzzleDocument(buildDocument()));
 
 	onMount(() => {
+		void initialise();
+	});
+
+	async function initialise() {
 		const saved = localStorage.getItem(draftKey);
 		if (saved) {
 			try {
@@ -46,8 +51,17 @@
 				localStorage.removeItem(draftKey);
 			}
 		}
+		const requestedID = new URLSearchParams(location.search).get('id');
+		if (requestedID) {
+			try {
+				loadDocument(await getPuzzle(requestedID));
+				statusMessage = 'Loaded persistent draft';
+			} catch (error) {
+				statusMessage = error instanceof Error ? error.message : 'Could not load draft';
+			}
+		}
 		readyToSave = true;
-	});
+	}
 
 	$effect(() => {
 		if (browser && readyToSave) localStorage.setItem(draftKey, capture());
@@ -296,6 +310,7 @@
 		<div>
 			<p class="eyebrow">Cryptic Workshop</p>
 			<h1>Set the grid. Shape the clue.</h1>
+			<a class="library-link" href={resolve('/library')}>View saved drafts →</a>
 		</div>
 		<div class="document-meta">
 			<label>Title <input bind:value={title} onfocus={recordHistory} /></label>
@@ -467,6 +482,17 @@
 			sans-serif;
 		letter-spacing: 0.18em;
 		text-transform: uppercase;
+	}
+	.library-link {
+		display: inline-block;
+		margin-top: 0.8rem;
+		color: #a23d2e;
+		font:
+			700 0.74rem system-ui,
+			sans-serif;
+		text-decoration: none;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 	}
 	h1 {
 		margin: 0;

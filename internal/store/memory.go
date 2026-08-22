@@ -3,7 +3,7 @@ package store
 type MemoryStore struct {
 	Puzzles   *PuzzleStore
 	Sessions  *SessionStore
-	Documents *DocumentStore
+	Documents DocumentRepository
 }
 
 func NewMemoryStore() *MemoryStore {
