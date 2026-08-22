@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use cryptic_core::{Candidate, Wordlist};
+use cryptic_core::{Analysis, Candidate, Wordlist};
 use serde::Serialize;
 use std::{fs, path::PathBuf, process::ExitCode};
 
@@ -29,11 +29,21 @@ enum Command {
         #[arg(long, default_value_t = 0)]
         enumeration: usize,
     },
+    /// Suggest structured wordplay parses for a complete clue.
+    Analyse {
+        #[arg(long)]
+        clue: String,
+        /// Known crossing letters, using ? for an unknown letter.
+        #[arg(long)]
+        known: Option<String>,
+    },
 }
 
 #[derive(Debug, Serialize)]
-struct Output {
-    candidates: Vec<Candidate>,
+#[serde(untagged)]
+enum Output {
+    Candidates { candidates: Vec<Candidate> },
+    Analysis(Analysis),
 }
 
 fn main() -> ExitCode {
@@ -58,13 +68,20 @@ fn run(cli: Cli) -> Result<Output, Box<dyn std::error::Error>> {
     })?;
     let wordlist = Wordlist::parse(&contents);
 
-    let candidates = match cli.command {
+    let output = match cli.command {
         Command::Anagram {
             letters,
             enumeration,
-        } => wordlist.anagrams(&letters, enumeration)?,
-        Command::Pattern { known, enumeration } => wordlist.pattern_matches(&known, enumeration)?,
+        } => Output::Candidates {
+            candidates: wordlist.anagrams(&letters, enumeration)?,
+        },
+        Command::Pattern { known, enumeration } => Output::Candidates {
+            candidates: wordlist.pattern_matches(&known, enumeration)?,
+        },
+        Command::Analyse { clue, known } => {
+            Output::Analysis(wordlist.analyse(&clue, known.as_deref())?)
+        }
     };
 
-    Ok(Output { candidates })
+    Ok(output)
 }
