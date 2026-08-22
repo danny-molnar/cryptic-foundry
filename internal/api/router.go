@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/danny-molnar/crossword/internal/api/handlers"
+	"github.com/danny-molnar/crossword/internal/solver"
 	"github.com/danny-molnar/crossword/internal/store"
 	"github.com/danny-molnar/crossword/internal/tools"
 )
@@ -18,7 +19,7 @@ func NewRouter(st *store.MemoryStore, wl *tools.Wordlist) http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	h := handlers.New(st, wl)
+	h := handlers.New(st, wl, solver.NewFromEnv())
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
@@ -34,6 +35,7 @@ func NewRouter(st *store.MemoryStore, wl *tools.Wordlist) http.Handler {
 
 		r.Get("/tools/anagram", h.Anagram)
 		r.Get("/tools/pattern", h.Pattern)
+		r.Post("/tools/analyse", h.Analyse)
 	})
 
 	return r
