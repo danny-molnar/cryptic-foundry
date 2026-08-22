@@ -15,6 +15,15 @@ export type AnalysisResponse = {
 	candidates: AnalysisCandidate[];
 };
 
+export type DraftSummary = {
+	id: string;
+	title: string;
+	author: string;
+	rows: number;
+	cols: number;
+	updatedAt: string;
+};
+
 export async function savePuzzle(document: PuzzleDocument): Promise<PuzzleDocument> {
 	const response = await fetch(document.id ? `/v1/puzzles/${document.id}` : '/v1/puzzles', {
 		method: document.id ? 'PUT' : 'POST',
@@ -31,6 +40,22 @@ export async function analyseClue(clue: string, known: string): Promise<Analysis
 		body: JSON.stringify({ clue, known })
 	});
 	return decode<AnalysisResponse>(response);
+}
+
+export async function getPuzzle(id: string): Promise<PuzzleDocument> {
+	return decode<PuzzleDocument>(await fetch(`/v1/puzzles/${encodeURIComponent(id)}/editor`));
+}
+
+export async function listDrafts(): Promise<DraftSummary[]> {
+	const result = await decode<{ drafts: DraftSummary[] }>(await fetch('/v1/editor/puzzles'));
+	return result.drafts;
+}
+
+export async function deleteDraft(id: string): Promise<void> {
+	const response = await fetch(`/v1/editor/puzzles/${encodeURIComponent(id)}`, {
+		method: 'DELETE'
+	});
+	if (!response.ok) await decode(response);
 }
 
 async function decode<T>(response: Response): Promise<T> {
