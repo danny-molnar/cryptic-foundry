@@ -54,6 +54,12 @@ util/ shared utilities (ULID IDs)
 wordlists/
 english.txt sample wordlist
 
+frontend/
+SvelteKit and TypeScript crossword editor
+
+fixtures/
+versioned puzzle-document examples shared by backend and frontend work
+
 Running locally
 
 Prerequisites
