@@ -1,13 +1,15 @@
 package store
 
 type MemoryStore struct {
-	Puzzles  *PuzzleStore
-	Sessions *SessionStore
+	Puzzles   *PuzzleStore
+	Sessions  *SessionStore
+	Documents *DocumentStore
 }
 
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		Puzzles:  NewPuzzleStore(),
-		Sessions: NewSessionStore(),
+		Puzzles:   NewPuzzleStore(),
+		Sessions:  NewSessionStore(),
+		Documents: NewDocumentStore(),
 	}
 }

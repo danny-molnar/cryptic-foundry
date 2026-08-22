@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-cryptic",
+  "title": "Cryptic Workshop",
+  "author": "Danny Molnar",
+  "type": "cryptic",
+  "status": "draft",
+  "grid": {
+    "rows": 3,
+    "cols": 3,
+    "cells": [
+      [{ "solution": "C" }, { "solution": "A" }, { "solution": "T" }],
+      [{ "block": true }, { "solution": "R" }, { "block": true }],
+      [{ "solution": "T" }, { "solution": "E" }, { "solution": "A" }]
+    ]
+  },
+  "entries": [
+    {
+      "id": "1-across",
+      "number": 1,
+      "direction": "across",
+      "cells": [{ "row": 0, "column": 0 }, { "row": 0, "column": 1 }, { "row": 0, "column": 2 }],
+      "answer": "CAT",
+      "enumeration": "3",
+      "clue": "Pet appearing in catastrophe (3)",
+      "explanation": "Hidden answer in catastrophe",
+      "tags": ["hidden"]
+    },
+    {
+      "id": "2-down",
+      "number": 2,
+      "direction": "down",
+      "cells": [{ "row": 0, "column": 1 }, { "row": 1, "column": 1 }, { "row": 2, "column": 1 }],
+      "answer": "ARE",
+      "enumeration": "3",
+      "clue": "Exist in the plural (3)"
+    },
+    {
+      "id": "3-across",
+      "number": 3,
+      "direction": "across",
+      "cells": [{ "row": 2, "column": 0 }, { "row": 2, "column": 1 }, { "row": 2, "column": 2 }],
+      "answer": "TEA",
+      "enumeration": "3",
+      "clue": "Drink (3)"
+    }
+  ]
+}

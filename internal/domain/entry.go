@@ -8,15 +8,15 @@ const (
 )
 
 type Entry struct {
-	ID    string
-	Dir   Direction
-	Num   int
-	Cells []CellRef
-	Enum  string
+	ID     string
+	Dir    Direction
+	Num    int
+	Cells  []CellRef
+	Enum   string
 	Answer string
 }
 
 type CellRef struct {
-	R int
-	C int
+	R int `json:"row"`
+	C int `json:"column"`
 }
