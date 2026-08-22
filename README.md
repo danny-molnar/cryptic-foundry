@@ -64,16 +64,26 @@ Running locally
 
 Prerequisites
 
-Go 1.22 or newer
+Go 1.24.3 or newer
 
 Run tests
-go test ./...
+go test ./cmd/... ./internal/...
+
+Build the Rust solver
+cargo build --manifest-path solver/Cargo.toml
 
 Start the API
 go run ./cmd/api
 
 The server will start on
 http://localhost:8080
+
+Start the editor in a second terminal
+cd frontend
+npm install
+npm run dev
+
+The editor will start on http://localhost:5173 and proxy API requests to Go.
 
 Example endpoints
 
@@ -82,6 +92,14 @@ curl http://localhost:8080/v1/health
 
 Fetch a puzzle (public view)
 curl http://localhost:8080/v1/puzzles/puz_demo
+
+Create an editor draft
+curl -X POST http://localhost:8080/v1/puzzles \
+  -H 'Content-Type: application/json' \
+  --data-binary @fixtures/puzzles/demo-cryptic.json
+
+Fetch an editor draft (includes solutions)
+curl http://localhost:8080/v1/puzzles/demo-cryptic/editor
 
 Create a solve session
 curl -X POST http://localhost:8080/v1/puzzles/puz_demo/sessions

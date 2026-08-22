@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { analyseClue, savePuzzle, type AnalysisResponse } from '$lib/api';
 	import { createGrid, deriveEntries } from '$lib/puzzle/grid';
 	import { parsePuzzleDocument, validatePuzzleDocument } from '$lib/puzzle/document';
 	import type { Cell, Direction, PuzzleDocument } from '$lib/puzzle/types';
@@ -7,6 +8,7 @@
 
 	const draftKey = 'cryptic-workshop:draft:v1';
 	type Snapshot = {
+		puzzleID?: string;
 		title: string;
 		author: string;
 		size: number;
@@ -15,6 +17,7 @@
 	};
 
 	let title = $state('Untitled cryptic');
+	let puzzleID = $state<string>();
 	let author = $state('Danny Molnar');
 	let size = $state(7);
 	let grid = $state(createGrid(7, 7));
@@ -27,6 +30,9 @@
 	let redoStack = $state<string[]>([]);
 	let readyToSave = $state(false);
 	let fileInput = $state<HTMLInputElement>();
+	let saving = $state(false);
+	let analysing = $state<Record<string, boolean>>({});
+	let analyses = $state<Record<string, AnalysisResponse>>({});
 	let entries = $derived(deriveEntries(grid));
 	let issues = $derived(validatePuzzleDocument(buildDocument()));
 
@@ -48,11 +54,12 @@
 	});
 
 	function capture() {
-		return JSON.stringify({ title, author, size, grid, clueText } satisfies Snapshot);
+		return JSON.stringify({ puzzleID, title, author, size, grid, clueText } satisfies Snapshot);
 	}
 
 	function restore(snapshot: string) {
 		const value = JSON.parse(snapshot) as Snapshot;
+		puzzleID = value.puzzleID;
 		title = value.title;
 		author = value.author;
 		size = value.size;
@@ -176,6 +183,7 @@
 	function buildDocument(): PuzzleDocument {
 		return {
 			schemaVersion: 1,
+			id: puzzleID,
 			title,
 			author,
 			type: 'cryptic',
@@ -228,6 +236,7 @@
 	}
 
 	function loadDocument(document: PuzzleDocument) {
+		puzzleID = document.id;
 		title = document.title;
 		author = document.author;
 		size = document.grid.rows;
@@ -241,6 +250,37 @@
 		);
 		clueText = Object.fromEntries(document.entries.map((entry) => [entry.id, entry.clue ?? '']));
 		selected = { row: 0, column: 0 };
+	}
+
+	async function saveDraft() {
+		saving = true;
+		try {
+			const saved = await savePuzzle(buildDocument());
+			puzzleID = saved.id;
+			statusMessage = `Saved draft ${saved.id}`;
+		} catch (error) {
+			statusMessage = error instanceof Error ? error.message : 'Could not save draft';
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function analyseEntry(entry: (typeof entries)[number]) {
+		const clue = clueText[entry.id]?.trim();
+		if (!clue) {
+			statusMessage = 'Write a clue before analysing it';
+			return;
+		}
+		analysing[entry.id] = true;
+		try {
+			const fullClue = /\([\d, -]+\)\s*$/.test(clue) ? clue : `${clue} (${entry.cells.length})`;
+			analyses[entry.id] = await analyseClue(fullClue, answerFor(entry));
+			statusMessage = `Analysed ${entry.number} ${entry.direction}`;
+		} catch (error) {
+			statusMessage = error instanceof Error ? error.message : 'Could not analyse clue';
+		} finally {
+			analysing[entry.id] = false;
+		}
 	}
 </script>
 
@@ -293,6 +333,12 @@
 			onchange={(event) => importPuzzle(event.currentTarget.files?.[0])}
 		/>
 		<button onclick={() => fileInput?.click()}>Import JSON</button>
+		<button
+			onclick={saveDraft}
+			disabled={saving || issues.some((issue) => issue.severity === 'error')}
+		>
+			{saving ? 'Saving…' : puzzleID ? 'Update draft' : 'Save draft'}
+		</button>
 		<button class="export" onclick={exportPuzzle}>Export JSON</button>
 	</section>
 
@@ -344,6 +390,7 @@
 				<section class="clue-group">
 					<h2>{group}</h2>
 					{#each entries.filter((entry) => entry.direction === group) as entry (entry.id)}
+						{@const analysis = analyses[entry.id]}
 						<label class="clue-row">
 							<span class="clue-number">{entry.number}</span>
 							<span class="answer">{answerFor(entry)} <small>({entry.cells.length})</small></span>
@@ -353,7 +400,25 @@
 								oninput={(event) => (clueText[entry.id] = event.currentTarget.value)}
 								placeholder="Write the clue…"
 							/>
+							<button
+								class="analyse"
+								type="button"
+								disabled={analysing[entry.id]}
+								onclick={() => analyseEntry(entry)}
+							>
+								{analysing[entry.id] ? 'Thinking…' : 'Analyse'}
+							</button>
 						</label>
+						{#if analysis}
+							<div class="analysis-result">
+								<strong>Suggested parses</strong>
+								{#each analysis.candidates.slice(0, 4) as candidate (candidate.answer)}
+									<span class:match={candidate.matches_pattern}>{candidate.answer}</span>
+								{:else}
+									<em>No candidates in the current word list.</em>
+								{/each}
+							</div>
+						{/if}
 					{:else}
 						<p class="empty">Add open runs of two or more cells.</p>
 					{/each}
@@ -604,7 +669,7 @@
 	}
 	.clue-row {
 		display: grid;
-		grid-template-columns: 2rem minmax(6rem, 0.42fr) 1fr;
+		grid-template-columns: 2rem minmax(6rem, 0.35fr) 1fr auto;
 		gap: 0.7rem;
 		align-items: center;
 		margin-bottom: 0.55rem;
@@ -617,6 +682,36 @@
 			750 1rem system-ui,
 			sans-serif;
 		color: #a23d2e;
+	}
+	.analyse {
+		align-self: stretch;
+		padding: 0 0.7rem;
+		border-color: #a23d2e;
+		color: #a23d2e;
+		background: transparent;
+		font:
+			700 0.67rem system-ui,
+			sans-serif;
+		text-transform: uppercase;
+	}
+	.analysis-result {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.45rem;
+		align-items: center;
+		margin: -0.1rem 0 0.8rem 2.7rem;
+		font:
+			0.72rem system-ui,
+			sans-serif;
+	}
+	.analysis-result span {
+		padding: 0.2rem 0.4rem;
+		background: #ded8c9;
+		text-transform: uppercase;
+	}
+	.analysis-result span.match {
+		background: #263c34;
+		color: #fff;
 	}
 	.answer {
 		overflow: hidden;

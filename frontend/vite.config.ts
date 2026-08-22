@@ -17,6 +17,11 @@ export default defineConfig({
 			adapter: adapter()
 		})
 	],
+	server: {
+		proxy: {
+			'/v1': 'http://127.0.0.1:8080'
+		}
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
