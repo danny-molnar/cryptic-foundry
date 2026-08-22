@@ -64,7 +64,7 @@ Running locally
 
 Prerequisites
 
-Go 1.24.3 or newer
+Go 1.25 or newer
 
 Run tests
 go test ./cmd/... ./internal/...
@@ -84,6 +84,9 @@ npm install
 npm run dev
 
 The editor will start on http://localhost:5173 and proxy API requests to Go.
+
+Puzzle drafts persist in `crossword.db`. Set `CROSSWORD_DB_PATH` to use a
+different SQLite database location.
 
 Example endpoints
 

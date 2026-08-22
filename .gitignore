@@ -16,3 +16,6 @@
 # Build
 dist/
 solver/target/
+crossword.db
+crossword.db-shm
+crossword.db-wal
