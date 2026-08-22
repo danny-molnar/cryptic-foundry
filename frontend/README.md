@@ -13,6 +13,10 @@ The first editor slice supports grid resizing, keyboard entry, block toggling,
 automatic Across/Down numbering, clue entry, and JSON export. Space toggles a
 block, Enter changes writing direction, and right-click also toggles a block.
 
+Drafts are automatically saved in browser storage. The editor also supports
+versioned JSON import, undo/redo, optional 180-degree block symmetry, and live
+draft validation.
+
 Quality checks:
 
 ```sh

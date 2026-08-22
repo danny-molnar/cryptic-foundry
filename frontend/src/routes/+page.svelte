@@ -1,6 +1,18 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { createGrid, deriveEntries } from '$lib/puzzle/grid';
-	import type { Direction, PuzzleDocument } from '$lib/puzzle/types';
+	import { parsePuzzleDocument, validatePuzzleDocument } from '$lib/puzzle/document';
+	import type { Cell, Direction, PuzzleDocument } from '$lib/puzzle/types';
+	import { onMount } from 'svelte';
+
+	const draftKey = 'cryptic-workshop:draft:v1';
+	type Snapshot = {
+		title: string;
+		author: string;
+		size: number;
+		grid: Cell[][];
+		clueText: Record<string, string>;
+	};
 
 	let title = $state('Untitled cryptic');
 	let author = $state('Danny Molnar');
@@ -9,10 +21,71 @@
 	let selected = $state({ row: 0, column: 0 });
 	let direction = $state<Direction>('across');
 	let clueText = $state<Record<string, string>>({});
-	let exportMessage = $state('');
+	let statusMessage = $state('Draft is kept in this browser');
+	let symmetry = $state(true);
+	let undoStack = $state<string[]>([]);
+	let redoStack = $state<string[]>([]);
+	let readyToSave = $state(false);
+	let fileInput = $state<HTMLInputElement>();
 	let entries = $derived(deriveEntries(grid));
+	let issues = $derived(validatePuzzleDocument(buildDocument()));
+
+	onMount(() => {
+		const saved = localStorage.getItem(draftKey);
+		if (saved) {
+			try {
+				restore(saved);
+				statusMessage = 'Recovered local draft';
+			} catch {
+				localStorage.removeItem(draftKey);
+			}
+		}
+		readyToSave = true;
+	});
+
+	$effect(() => {
+		if (browser && readyToSave) localStorage.setItem(draftKey, capture());
+	});
+
+	function capture() {
+		return JSON.stringify({ title, author, size, grid, clueText } satisfies Snapshot);
+	}
+
+	function restore(snapshot: string) {
+		const value = JSON.parse(snapshot) as Snapshot;
+		title = value.title;
+		author = value.author;
+		size = value.size;
+		grid = value.grid;
+		clueText = value.clueText;
+		selected = { row: 0, column: 0 };
+	}
+
+	function recordHistory() {
+		undoStack = [...undoStack.slice(-49), capture()];
+		redoStack = [];
+	}
+
+	function undo() {
+		const previous = undoStack.at(-1);
+		if (!previous) return;
+		redoStack = [...redoStack, capture()];
+		undoStack = undoStack.slice(0, -1);
+		restore(previous);
+		statusMessage = 'Undid last edit';
+	}
+
+	function redo() {
+		const next = redoStack.at(-1);
+		if (!next) return;
+		undoStack = [...undoStack, capture()];
+		redoStack = redoStack.slice(0, -1);
+		restore(next);
+		statusMessage = 'Redid edit';
+	}
 
 	function resize(nextSize: number) {
+		recordHistory();
 		size = nextSize;
 		grid = createGrid(size, size);
 		selected = { row: 0, column: 0 };
@@ -20,9 +93,15 @@
 	}
 
 	function toggleBlock(row = selected.row, column = selected.column) {
+		recordHistory();
 		const cell = grid[row][column];
 		cell.block = !cell.block;
 		cell.solution = '';
+		if (symmetry) {
+			const mirror = grid[size - row - 1][size - column - 1];
+			mirror.block = cell.block;
+			mirror.solution = '';
+		}
 	}
 
 	function move(deltaRow: number, deltaColumn: number) {
@@ -39,17 +118,31 @@
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
+		if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+			if (event.shiftKey) redo();
+			else undo();
+			event.preventDefault();
+			return;
+		}
+		if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+			redo();
+			event.preventDefault();
+			return;
+		}
 		if ((event.target as HTMLElement).matches('input, textarea')) return;
 		const cell = grid[selected.row][selected.column];
 		if (/^[a-zA-Z]$/.test(event.key) && !cell.block) {
+			recordHistory();
 			cell.solution = event.key.toUpperCase();
 			advance();
 			event.preventDefault();
 			return;
 		}
 		if (event.key === 'Backspace' && !cell.block) {
-			if (cell.solution) cell.solution = '';
-			else advance(true);
+			if (cell.solution) {
+				recordHistory();
+				cell.solution = '';
+			} else advance(true);
 			event.preventDefault();
 			return;
 		}
@@ -117,7 +210,37 @@
 		anchor.download = `${title.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-') || 'puzzle'}.json`;
 		anchor.click();
 		URL.revokeObjectURL(url);
-		exportMessage = `Exported ${entries.length} entries`;
+		statusMessage = `Exported ${entries.length} entries`;
+	}
+
+	async function importPuzzle(file: File | undefined) {
+		if (!file) return;
+		try {
+			const document = parsePuzzleDocument(await file.text());
+			recordHistory();
+			loadDocument(document);
+			statusMessage = `Imported ${file.name}`;
+		} catch (error) {
+			statusMessage = error instanceof Error ? error.message : 'Could not import puzzle';
+		} finally {
+			if (fileInput) fileInput.value = '';
+		}
+	}
+
+	function loadDocument(document: PuzzleDocument) {
+		title = document.title;
+		author = document.author;
+		size = document.grid.rows;
+		grid = document.grid.cells.map((row, rowIndex) =>
+			row.map((cell, columnIndex) => ({
+				row: rowIndex,
+				column: columnIndex,
+				block: Boolean(cell.block),
+				solution: cell.solution?.toUpperCase() ?? ''
+			}))
+		);
+		clueText = Object.fromEntries(document.entries.map((entry) => [entry.id, entry.clue ?? '']));
+		selected = { row: 0, column: 0 };
 	}
 </script>
 
@@ -135,8 +258,8 @@
 			<h1>Set the grid. Shape the clue.</h1>
 		</div>
 		<div class="document-meta">
-			<label>Title <input bind:value={title} /></label>
-			<label>Setter <input bind:value={author} /></label>
+			<label>Title <input bind:value={title} onfocus={recordHistory} /></label>
+			<label>Setter <input bind:value={author} onfocus={recordHistory} /></label>
 		</div>
 	</header>
 
@@ -155,6 +278,21 @@
 				{direction === 'across' ? '→ Across' : '↓ Down'}
 			</button>
 		</div>
+		<label class="symmetry-control">
+			<input type="checkbox" bind:checked={symmetry} /> 180° symmetry
+		</label>
+		<div class="history-control">
+			<button onclick={undo} disabled={undoStack.length === 0} title="Undo">↶</button>
+			<button onclick={redo} disabled={redoStack.length === 0} title="Redo">↷</button>
+		</div>
+		<input
+			class="file-input"
+			type="file"
+			accept="application/json,.json"
+			bind:this={fileInput}
+			onchange={(event) => importPuzzle(event.currentTarget.files?.[0])}
+		/>
+		<button onclick={() => fileInput?.click()}>Import JSON</button>
 		<button class="export" onclick={exportPuzzle}>Export JSON</button>
 	</section>
 
@@ -190,7 +328,15 @@
 				<span><kbd>Letters</kbd> fill</span><span><kbd>Space</kbd> block</span>
 				<span><kbd>Enter</kbd> turn</span><span><kbd>Right click</kbd> block</span>
 			</div>
-			{#if exportMessage}<p class="status">{exportMessage}</p>{/if}
+			<p class="status">{statusMessage}</p>
+			<div class="validation" class:valid={issues.length === 0}>
+				<strong
+					>{issues.length === 0 ? 'Draft checks passed' : `${issues.length} draft checks`}</strong
+				>
+				{#each issues as issue, index (`${issue.severity}-${index}`)}
+					<p class:error={issue.severity === 'error'}>{issue.message}</p>
+				{/each}
+			</div>
 		</div>
 
 		<aside>
@@ -203,6 +349,7 @@
 							<span class="answer">{answerFor(entry)} <small>({entry.cells.length})</small></span>
 							<input
 								value={clueText[entry.id] ?? ''}
+								onfocus={recordHistory}
 								oninput={(event) => (clueText[entry.id] = event.currentTarget.value)}
 								placeholder="Write the clue…"
 							/>
@@ -308,6 +455,24 @@
 		margin-right: 0.35rem;
 		color: #69675f;
 	}
+	.symmetry-control {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		white-space: nowrap;
+	}
+	.symmetry-control input {
+		width: auto;
+		margin: 0;
+		accent-color: #a23d2e;
+	}
+	.file-input {
+		display: none;
+	}
+	.toolbar button:disabled {
+		cursor: not-allowed;
+		opacity: 0.35;
+	}
 	button {
 		border: 1px solid #938c7e;
 		background: #fcfaf4;
@@ -402,6 +567,26 @@
 		font:
 			0.75rem system-ui,
 			sans-serif;
+	}
+	.validation {
+		margin-top: 1rem;
+		padding: 0.9rem;
+		border-left: 3px solid #f0ca83;
+		background: rgba(255, 255, 255, 0.08);
+		color: #f3efe5;
+		font:
+			0.75rem/1.4 system-ui,
+			sans-serif;
+	}
+	.validation.valid {
+		border-color: #91b89b;
+	}
+	.validation p {
+		margin: 0.35rem 0 0;
+		color: #f0ca83;
+	}
+	.validation p.error {
+		color: #ff9d8d;
 	}
 	aside {
 		display: grid;
