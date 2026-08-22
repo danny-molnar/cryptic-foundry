@@ -67,6 +67,16 @@ func ValidatePuzzleDocument(document PuzzleDocument) error {
 	if document.Status != PuzzleDraft && document.Status != PuzzlePublished {
 		problems.add("invalid puzzle status %q", document.Status)
 	}
+	if document.Status == PuzzlePublished {
+		for index, entry := range document.Entries {
+			if strings.TrimSpace(entry.Answer) == "" {
+				problems.add("entry[%d] answer is required for publishing", index)
+			}
+			if strings.TrimSpace(entry.Clue) == "" {
+				problems.add("entry[%d] clue is required for publishing", index)
+			}
+		}
+	}
 
 	puzzle, err := document.toPuzzle()
 	if err != nil {
@@ -113,10 +123,12 @@ func (document PuzzleDocument) toPuzzle() (Puzzle, error) {
 			ID: entry.ID, Dir: entry.Direction, Num: entry.Number, Cells: entry.Cells,
 			Enum: entry.Enumeration, Answer: entry.Answer,
 		})
-		clues = append(clues, Clue{
-			EntryID: entry.ID, Text: entry.Clue, Tags: entry.Tags,
-			Explanation: optionalString(entry.Explanation),
-		})
+		if entry.Clue != "" || entry.Explanation != "" || len(entry.Tags) > 0 {
+			clues = append(clues, Clue{
+				EntryID: entry.ID, Text: entry.Clue, Tags: entry.Tags,
+				Explanation: optionalString(entry.Explanation),
+			})
+		}
 	}
 
 	return Puzzle{

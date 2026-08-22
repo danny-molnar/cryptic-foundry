@@ -28,6 +28,10 @@ func NewRouter(st *store.MemoryStore, wl *tools.Wordlist) http.Handler {
 		})
 
 		r.Get("/puzzles/{id}", h.GetPuzzle)
+		r.Post("/puzzles", h.CreatePuzzleDocument)
+		r.Put("/puzzles/{id}", h.UpdatePuzzleDocument)
+		r.Get("/puzzles/{id}/editor", h.GetPuzzleDocument)
+		r.Post("/puzzles/validate", h.ValidatePuzzleDocument)
 
 		r.Post("/puzzles/{id}/sessions", h.CreateSession)
 		r.Get("/sessions/{sid}", h.GetSession)
