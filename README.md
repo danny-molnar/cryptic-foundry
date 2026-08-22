@@ -88,6 +88,14 @@ Pattern matcher
 curl "http://localhost:8080/v1/tools/pattern?pattern=tr?c?&len=5
 "
 
+Analyse a cryptic clue (after building the Rust solver with `cargo build --manifest-path solver/Cargo.toml`)
+curl -X POST http://localhost:8080/v1/tools/analyse \
+  -H 'Content-Type: application/json' \
+  -d '{"clue":"Confused caret produces a response (5)","known":"R??C?"}'
+
+Set `CRYPTIC_SOLVER_PATH` and `CRYPTIC_WORDLIST_PATH` to override the default
+binary and word-list locations.
+
 Design principles
 
 Correctness first: invalid puzzles are rejected early
@@ -99,6 +107,10 @@ No solution leakage: solver APIs never expose answers
 Incremental extensibility: storage, auth, and UI can be added later without refactoring the core
 
 Roadmap (rough)
+
+Rust cryptic candidate engine (anagrams, crossing-letter patterns, and later
+structured wordplay explanations) lives in `solver/`. The Go API remains the
+application backend and source of truth for puzzles and solve sessions.
 
 Check and reveal endpoints
 
