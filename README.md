@@ -100,6 +100,10 @@ Incremental extensibility: storage, auth, and UI can be added later without refa
 
 Roadmap (rough)
 
+Rust cryptic candidate engine (anagrams, crossing-letter patterns, and later
+structured wordplay explanations) lives in `solver/`. The Go API remains the
+application backend and source of truth for puzzles and solve sessions.
+
 Check and reveal endpoints
 
 Creator-side puzzle creation and editing

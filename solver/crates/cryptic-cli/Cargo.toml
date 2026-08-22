@@ -1,0 +1,16 @@
+[package]
+name = "cryptic-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "cryptic"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+cryptic-core = { path = "../cryptic-core" }
+serde.workspace = true
+serde_json.workspace = true
+
