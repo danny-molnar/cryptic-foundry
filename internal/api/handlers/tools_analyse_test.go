@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danny-molnar/crossword/internal/solver"
+	"github.com/danny-molnar/cryptic-foundry/internal/solver"
 )
 
 type fakeAnalyzer struct {

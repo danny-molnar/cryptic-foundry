@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/danny-molnar/crossword/internal/solver"
-	"github.com/danny-molnar/crossword/internal/store"
-	"github.com/danny-molnar/crossword/internal/tools"
+	"github.com/danny-molnar/cryptic-foundry/internal/solver"
+	"github.com/danny-molnar/cryptic-foundry/internal/store"
+	"github.com/danny-molnar/cryptic-foundry/internal/tools"
 )
 
 type Handler struct {

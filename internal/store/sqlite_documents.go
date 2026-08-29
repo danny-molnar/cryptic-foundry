@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/danny-molnar/crossword/internal/domain"
+	"github.com/danny-molnar/cryptic-foundry/internal/domain"
 	_ "modernc.org/sqlite"
 )
 

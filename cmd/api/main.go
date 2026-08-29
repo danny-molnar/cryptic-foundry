@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/danny-molnar/crossword/internal/api"
-	"github.com/danny-molnar/crossword/internal/store"
-	"github.com/danny-molnar/crossword/internal/tools"
+	"github.com/danny-molnar/cryptic-foundry/internal/api"
+	"github.com/danny-molnar/cryptic-foundry/internal/store"
+	"github.com/danny-molnar/cryptic-foundry/internal/tools"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("load word list: %v", err)
 	}
 
-	documentStore, err := store.OpenSQLiteDocumentStore(envOrDefault("CROSSWORD_DB_PATH", "crossword.db"))
+	documentStore, err := store.OpenSQLiteDocumentStore(databasePath())
 	if err != nil {
 		log.Fatalf("open document store: %v", err)
 	}
@@ -37,7 +37,7 @@ func main() {
 		IdleTimeout:       60 * time.Second,
 	}
 
-	log.Printf("crossword API listening on %s", address)
+	log.Printf("Cryptic Foundry API listening on %s", address)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("serve API: %v", err)
 	}
@@ -48,4 +48,18 @@ func envOrDefault(name, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func databasePath() string {
+	if value := os.Getenv("CRYPTIC_FOUNDRY_DB_PATH"); value != "" {
+		return value
+	}
+	if value := os.Getenv("CROSSWORD_DB_PATH"); value != "" {
+		return value
+	}
+	// Continue using an existing pre-rename database rather than hiding drafts.
+	if _, err := os.Stat("crossword.db"); err == nil {
+		return "crossword.db"
+	}
+	return "cryptic-foundry.db"
 }

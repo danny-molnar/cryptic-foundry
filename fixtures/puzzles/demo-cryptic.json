@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "demo-cryptic",
-  "title": "Cryptic Workshop",
+  "title": "Cryptic Foundry Demo",
   "author": "Danny Molnar",
   "type": "cryptic",
   "status": "draft",

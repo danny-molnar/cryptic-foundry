@@ -9,12 +9,12 @@ const (
 )
 
 type Puzzle struct {
-	ID     string
-	Title  string
-	Type   PuzzleType
-	Rows   int
-	Cols   int
-	Grid   Grid
+	ID      string
+	Title   string
+	Type    PuzzleType
+	Rows    int
+	Cols    int
+	Grid    Grid
 	Entries []Entry
 	Clues   []Clue
 }

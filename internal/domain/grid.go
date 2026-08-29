@@ -1,11 +1,11 @@
 package domain
 
 type Cell struct {
-	R       int
-	C       int
-	IsBlock bool
+	R        int
+	C        int
+	IsBlock  bool
 	Solution *rune
-	IsGiven bool
+	IsGiven  bool
 }
 
 type Grid struct {

@@ -16,6 +16,10 @@
 # Build
 dist/
 solver/target/
+*.solve.json
+cryptic-foundry.db
+cryptic-foundry.db-shm
+cryptic-foundry.db-wal
 crossword.db
 crossword.db-shm
 crossword.db-wal

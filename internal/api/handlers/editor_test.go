@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/danny-molnar/crossword/internal/domain"
-	"github.com/danny-molnar/crossword/internal/store"
+	"github.com/danny-molnar/cryptic-foundry/internal/domain"
+	"github.com/danny-molnar/cryptic-foundry/internal/store"
 )
 
 func validDocument() domain.PuzzleDocument {

@@ -33,12 +33,12 @@
 	}
 </script>
 
-<svelte:head><title>Saved drafts · Cryptic Workshop</title></svelte:head>
+<svelte:head><title>Saved drafts · Cryptic Foundry</title></svelte:head>
 
 <main>
 	<header>
 		<div>
-			<p>Cryptic Workshop</p>
+			<p>Cryptic Foundry</p>
 			<h1>Saved drafts</h1>
 		</div>
 		<a href={resolve('/')}>+ New puzzle</a>

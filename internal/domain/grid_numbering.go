@@ -18,7 +18,7 @@ func GenerateEntries(grid Grid) []Entry {
 			}
 
 			startAcross := isBlock(r, c-1) && !isBlock(r, c+1)
-			startDown   := isBlock(r-1, c) && !isBlock(r+1, c)
+			startDown := isBlock(r-1, c) && !isBlock(r+1, c)
 
 			if startAcross {
 				var cells []CellRef
