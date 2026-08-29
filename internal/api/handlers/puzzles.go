@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/danny-molnar/crossword/internal/domain"
+	"github.com/danny-molnar/cryptic-foundry/internal/domain"
 )
 
 func (h *Handler) GetPuzzle(w http.ResponseWriter, r *http.Request) {

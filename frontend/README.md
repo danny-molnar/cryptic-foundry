@@ -1,4 +1,4 @@
-# Cryptic Workshop frontend
+# Cryptic Foundry frontend
 
 The SvelteKit editor is the authoring surface for crossword grids and clues. It
 uses the version 1 puzzle document contract represented in Go by

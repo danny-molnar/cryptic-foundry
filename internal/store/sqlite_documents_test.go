@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/danny-molnar/crossword/internal/domain"
+	"github.com/danny-molnar/cryptic-foundry/internal/domain"
 )
 
 func TestSQLiteDocumentStorePersistsAndListsDocuments(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "crossword.db")
+	path := filepath.Join(t.TempDir(), "cryptic-foundry.db")
 	store, err := OpenSQLiteDocumentStore(path)
 	if err != nil {
 		t.Fatal(err)

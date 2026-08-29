@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/danny-molnar/crossword/internal/solver"
+	"github.com/danny-molnar/cryptic-foundry/internal/solver"
 )
 
 const maxAnalyseBodyBytes = 16 * 1024

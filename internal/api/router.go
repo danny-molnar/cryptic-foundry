@@ -6,10 +6,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/danny-molnar/crossword/internal/api/handlers"
-	"github.com/danny-molnar/crossword/internal/solver"
-	"github.com/danny-molnar/crossword/internal/store"
-	"github.com/danny-molnar/crossword/internal/tools"
+	"github.com/danny-molnar/cryptic-foundry/internal/api/handlers"
+	"github.com/danny-molnar/cryptic-foundry/internal/solver"
+	"github.com/danny-molnar/cryptic-foundry/internal/store"
+	"github.com/danny-molnar/cryptic-foundry/internal/tools"
 )
 
 func NewRouter(st *store.MemoryStore, wl *tools.Wordlist) http.Handler {

@@ -1,8 +1,8 @@
 package domain
 
 type Clue struct {
-	EntryID    string
-	Text       string
+	EntryID     string
+	Text        string
 	Explanation *string
-	Tags       []string
+	Tags        []string
 }

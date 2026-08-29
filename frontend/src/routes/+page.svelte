@@ -7,7 +7,8 @@
 	import type { Cell, Direction, PuzzleDocument } from '$lib/puzzle/types';
 	import { onMount } from 'svelte';
 
-	const draftKey = 'cryptic-workshop:draft:v1';
+	const draftKey = 'cryptic-foundry:draft:v1';
+	const legacyDraftKey = 'cryptic-workshop:draft:v1';
 	type Snapshot = {
 		puzzleID?: string;
 		title: string;
@@ -42,10 +43,12 @@
 	});
 
 	async function initialise() {
-		const saved = localStorage.getItem(draftKey);
+		const saved = localStorage.getItem(draftKey) ?? localStorage.getItem(legacyDraftKey);
 		if (saved) {
 			try {
 				restore(saved);
+				localStorage.setItem(draftKey, saved);
+				localStorage.removeItem(legacyDraftKey);
 				statusMessage = 'Recovered local draft';
 			} catch {
 				localStorage.removeItem(draftKey);
@@ -299,7 +302,7 @@
 </script>
 
 <svelte:head>
-	<title>Cryptic Workshop</title>
+	<title>Cryptic Foundry</title>
 	<meta name="description" content="A focused workspace for constructing cryptic crosswords." />
 </svelte:head>
 
@@ -308,7 +311,7 @@
 <main>
 	<header>
 		<div>
-			<p class="eyebrow">Cryptic Workshop</p>
+			<p class="eyebrow">Cryptic Foundry</p>
 			<h1>Set the grid. Shape the clue.</h1>
 			<a class="library-link" href={resolve('/library')}>View saved drafts →</a>
 		</div>

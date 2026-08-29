@@ -8,8 +8,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/danny-molnar/crossword/internal/domain"
-	"github.com/danny-molnar/crossword/internal/util"
+	"github.com/danny-molnar/cryptic-foundry/internal/domain"
+	"github.com/danny-molnar/cryptic-foundry/internal/util"
 )
 
 const maxPuzzleDocumentBytes = 1 << 20
